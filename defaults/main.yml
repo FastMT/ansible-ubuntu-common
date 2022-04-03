@@ -1,0 +1,14 @@
+# Do not ask password on sudo
+sudo_nopasswd: yes
+
+linux_timezone: 'UTC'
+#linux_timezone: 'Europe/Athens'
+
+# Disable IPv6
+linux_disable_ipv6: true
+
+# Sysctl parameters
+linux_sysctl:
+  - { name: "net.ipv4.tcp_ecn",     value: 0 }
+  - { name: "net.ipv4.ip_forward",  value: 1 }
+  - { name: "fs.file-max",          value: 70000 }
