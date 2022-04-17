@@ -213,3 +213,6 @@
     loopback_added.changed or
     loopback_removed.changed
   check_mode: no
+
+- name: Reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
