@@ -12,21 +12,21 @@
 # Resize root disk on first start for KVM VMs
 #
 
-- name: "[linux-common] Read remote file"
+- name: "Read remote file"
   slurp:
     src: /sys/devices/virtual/dmi/id/sys_vendor
   register: slurpfile
   ignore_errors: yes
   check_mode: no
 
-- name: "[linux-common] Check if server is VM"
+- name: "Check if server is VM"
   set_fact:
     linux_virtual: "{{ slurpfile['content'] | default('') | b64decode == 'QEMU\n' }}"
 
 - debug:
-    msg: "[linux-common] KVM VM detected: {{ linux_virtual }}"
+    msg: "KVM VM detected: {{ linux_virtual }}"
 
-- name: "[linux-common] Resize disk for KVM VMs and if partition is less than 2Gb"
+- name: "Resize disk for KVM VMs and if partition is less than 2Gb"
   shell: "resize2fs /dev/vda1"
   become: yes
   when: >
@@ -38,12 +38,12 @@
 #####################################################################################
 # Set hostname
 #
-- name: "[linux-common] Configure hostname"
+- name: "Configure hostname"
   hostname:
     name: "{{ inventory_hostname }}"
   become: yes
 
-- name: "[linux-common] Add hostname into /etc/hosts"
+- name: "Add hostname into /etc/hosts"
   lineinfile:
     dest: /etc/hosts
     state: present
@@ -55,33 +55,33 @@
 # Configure SSH server
 #
 
-- name: "[linux-common] /etc/ssh/sshd_config - disable root login"
+- name: "/etc/ssh/sshd_config - disable root login"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PermitRootLogin[ ]" line="PermitRootLogin no"
   become: yes
   register: disable_root_login
 
-- name: "[linux-common] /etc/ssh/sshd_config - disable password authentication"
+- name: "/etc/ssh/sshd_config - disable password authentication"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PasswordAuthentication[ ]" line="PasswordAuthentication no"
   become: yes
   register: disable_pw_auth
 
-- name: "[linux-common] /etc/ssh/sshd_config - disable DNS resolving on connect"
+- name: "/etc/ssh/sshd_config - disable DNS resolving on connect"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?UseDNS[ ]" line="UseDNS no"
   become: yes
   register: disable_dns_resolve
 
-- name: "[linux-common] /etc/ssh/sshd_config - disable GSSAPIAuthentication"
+- name: "/etc/ssh/sshd_config - disable GSSAPIAuthentication"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?GSSAPIAuthentication[ ]" line="GSSAPIAuthentication no"
   become: yes
   register: disable_GSSAPI
 
-- name: "[linux-common] /etc/ssh/sshd_config - set custom sshd port"
+- name: "/etc/ssh/sshd_config - set custom sshd port"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^Port[ ]" line="Port {{ ansible_port | default(22) }}"
   become: yes
   when: ansible_port is defined 
   register: custom_port
 
-- name: "[linux-common] Restart sshd if config changed"
+- name: "Restart sshd if config changed"
   service: name=sshd state=restarted
   become: yes
   when: >
@@ -94,12 +94,12 @@
 # Configure SUDO
 #
 
-- name: "[linux-common] /etc/sudoers - do not require password for sudo"
+- name: "/etc/sudoers - do not require password for sudo"
   lineinfile: dest=/etc/sudoers state=present regexp="^\%sudo[ \t]*ALL\=\(ALL\:ALL\)" line="%sudo ALL=(ALL:ALL) NOPASSWD:ALL"
   become: yes
   when: sudo_nopasswd == true
 
-- name: "[linux-common] /etc/sudoers - require password for sudo"
+- name: "/etc/sudoers - require password for sudo"
   lineinfile: dest=/etc/sudoers state=present regexp="^\%sudo[ \t]*ALL\=\(ALL\:ALL\)" line="%sudo ALL=(ALL:ALL) ALL"
   become: yes
   when: sudo_nopasswd == false
@@ -107,23 +107,23 @@
 #####################################################################################
 # Install packages
 #
-- name: "[linux-common] Updating repositories..."
+- name: "Updating repositories..."
   apt: update_cache=yes cache_valid_time=3600 force=yes
   become: yes
   changed_when: false
 
-- name: "[linux-common] Install tzdata package"
+- name: "Install tzdata package"
   apt:
     pkg: tzdata
     state: latest
     force: yes 
   become: yes
 
-- name: "[linux-common] Setting timezone..."
+- name: "Setting timezone..."
   timezone: "name={{ linux_timezone }}"
   become: yes
 
-- name: "[linux-common] Install packages"
+- name: "Install packages"
   apt:
     state: latest
     pkg:
@@ -156,7 +156,7 @@
      - jq
   become: yes
 
-- name: "[linux-common] disable IPv6"
+- name: "Disable IPv6"
   sysctl:
     name: "{{ item }}"
     value: "1"
@@ -169,7 +169,7 @@
   become: yes
   ignore_errors: yes
 
-- name: "[linux-common] Set Sysctl parameters"
+- name: "Set Sysctl parameters"
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -182,7 +182,7 @@
 # Additional Loopback IP
 #
 
-- name: "[linux-common] Deploy /etc/netplan/loopback.yaml config if loopback is defined"
+- name: "Deploy /etc/netplan/loopback.yaml config if loopback is defined"
   copy: 
     content: |
       network:
@@ -198,7 +198,7 @@
   when: loopback_ip is defined
   register: loopback_added
 
-- name: "[linux-common] Remove /etc/netplan/loopback.yaml config if loopback is NOT defined"
+- name: "Remove /etc/netplan/loopback.yaml config if loopback is NOT defined"
   file:
     state: absent
     path: /etc/netplan/loopback.yaml
@@ -206,7 +206,7 @@
   when: loopback_ip is not defined
   register: loopback_removed
 
-- name: "[linux-common] Apply netplan if required"
+- name: "Apply netplan if required"
   command: /usr/sbin/netplan apply
   become: yes
   when: >
