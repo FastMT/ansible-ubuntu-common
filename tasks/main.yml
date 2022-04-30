@@ -1,6 +1,6 @@
 #####################################################################################
 # Global
-#
+#####################################################################################
 - name: Gathering facts if it was not done before
   setup:
   when: ansible_facts['os_family'] is not defined
@@ -10,7 +10,7 @@
 
 #####################################################################################
 # Resize root disk on first start for KVM VMs
-#
+#####################################################################################
 
 - name: "Read remote file"
   slurp:
@@ -37,7 +37,7 @@
 
 #####################################################################################
 # Set hostname
-#
+#####################################################################################
 - name: "Configure hostname"
   hostname:
     name: "{{ inventory_hostname }}"
@@ -53,7 +53,7 @@
 
 #####################################################################################
 # Configure SSH server
-#
+#####################################################################################
 
 - name: "/etc/ssh/sshd_config - disable root login"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PermitRootLogin[ ]" line="PermitRootLogin no"
@@ -92,7 +92,7 @@
 
 #####################################################################################
 # Configure SUDO
-#
+#####################################################################################
 
 - name: "/etc/sudoers - do not require password for sudo"
   lineinfile: dest=/etc/sudoers state=present regexp="^\%sudo[ \t]*ALL\=\(ALL\:ALL\)" line="%sudo ALL=(ALL:ALL) NOPASSWD:ALL"
@@ -106,7 +106,7 @@
 
 #####################################################################################
 # Install packages
-#
+#####################################################################################
 - name: "Updating repositories..."
   apt: update_cache=yes cache_valid_time=3600 force=yes
   become: yes
@@ -178,9 +178,37 @@
   become: yes
   ignore_errors: yes
 
+- name: "Install Chrony time sync daemon"
+  apt:
+    state: latest
+    pkg:
+     - chrony
+  when: linux_install_chrony
+  become: yes
+
+#####################################################################################
+# Install KVM guest agent
+#####################################################################################
+
+- name: Install KVM Guest agent
+  apt:
+    state: latest
+    pkg:
+     - qemu-guest-agent
+  become: yes
+  when: linux_virtual 
+
+- name: Enable KVM Guest agent
+  service:
+    name: qemu-guest-agent
+    state: started
+    enabled: true
+  become: yes
+  when: linux_virtual 
+
 #####################################################################################
 # Additional Loopback IP
-#
+#####################################################################################
 
 - name: "Deploy /etc/netplan/loopback.yaml config if loopback is defined"
   copy: 
@@ -213,6 +241,3 @@
     loopback_added.changed or
     loopback_removed.changed
   check_mode: no
-
-- name: Reset ssh connection to allow user changes to affect 'current login user'
-  meta: reset_connection

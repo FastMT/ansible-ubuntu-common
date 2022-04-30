@@ -1,6 +1,9 @@
 # Do not ask password on sudo
 sudo_nopasswd: yes
 
+# Install Chrony time sync service
+linux_install_chrony: yes
+
 linux_timezone: 'UTC'
 #linux_timezone: 'Europe/Athens'
 
