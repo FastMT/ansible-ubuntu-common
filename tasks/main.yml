@@ -5,36 +5,6 @@
   setup:
   when: ansible_facts['os_family'] is not defined
 
-#- debug:
-#    msg: "{{ (ansible_mounts | selectattr('mount','equalto','/') | list | first).size_total }}"
-
-#####################################################################################
-# Resize root disk on first start for KVM VMs
-#####################################################################################
-
-- name: "Read remote file"
-  slurp:
-    src: /sys/devices/virtual/dmi/id/sys_vendor
-  register: slurpfile
-  ignore_errors: yes
-  check_mode: no
-
-- name: "Check if server is VM"
-  set_fact:
-    linux_virtual: "{{ slurpfile['content'] | default('') | b64decode == 'QEMU\n' }}"
-
-- debug:
-    msg: "KVM VM detected: {{ linux_virtual }}"
-
-- name: "Resize disk for KVM VMs and if partition is less than 2Gb"
-  shell: "resize2fs /dev/vda1"
-  become: yes
-  when: >
-    linux_virtual and
-    (ansible_mounts | selectattr('mount','equalto','/') | list | first).size_total < 2048*1024*1024
-  ignore_errors: yes
-  check_mode: no
-
 #####################################################################################
 # Set hostname
 #####################################################################################
@@ -64,6 +34,13 @@
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PasswordAuthentication[ ]" line="PasswordAuthentication no"
   become: yes
   register: disable_pw_auth
+  when: ssh_password_auth == false
+
+- name: "/etc/ssh/sshd_config - enable password authentication"
+  lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PasswordAuthentication[ ]" line="PasswordAuthentication yes"
+  become: yes
+  register: disable_pw_auth
+  when: ssh_password_auth == true
 
 - name: "/etc/ssh/sshd_config - disable DNS resolving on connect"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?UseDNS[ ]" line="UseDNS no"
@@ -185,59 +162,3 @@
      - chrony
   when: linux_install_chrony
   become: yes
-
-#####################################################################################
-# Install KVM guest agent
-#####################################################################################
-
-- name: Install KVM Guest agent
-  apt:
-    state: latest
-    pkg:
-     - qemu-guest-agent
-  become: yes
-  when: linux_virtual 
-
-- name: Enable KVM Guest agent
-  service:
-    name: qemu-guest-agent
-    state: started
-    enabled: true
-  become: yes
-  when: linux_virtual 
-
-#####################################################################################
-# Additional Loopback IP
-#####################################################################################
-
-- name: "Deploy /etc/netplan/loopback.yaml config if loopback is defined"
-  copy: 
-    content: |
-      network:
-        version: 2
-        renderer: networkd
-        ethernets:
-          lo:
-            match:
-              name: lo
-            addresses: [ {{ loopback_ip }}/32 ]
-    dest: /etc/netplan/loopback.yaml
-  become: yes
-  when: loopback_ip is defined
-  register: loopback_added
-
-- name: "Remove /etc/netplan/loopback.yaml config if loopback is NOT defined"
-  file:
-    state: absent
-    path: /etc/netplan/loopback.yaml
-  become: yes
-  when: loopback_ip is not defined
-  register: loopback_removed
-
-- name: "Apply netplan if required"
-  command: /usr/sbin/netplan apply
-  become: yes
-  when: >
-    loopback_added.changed or
-    loopback_removed.changed
-  check_mode: no

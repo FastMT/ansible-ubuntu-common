@@ -1,6 +1,9 @@
 # Do not ask password on sudo
 sudo_nopasswd: yes
 
+# Disable password authentication
+ssh_password_auth: no
+
 # Install Chrony time sync service
 linux_install_chrony: yes
 
