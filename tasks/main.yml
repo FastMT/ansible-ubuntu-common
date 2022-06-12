@@ -87,6 +87,7 @@
 - name: "Updating repositories..."
   apt: update_cache=yes cache_valid_time=3600 force=yes
   become: yes
+  check_mode: no
   changed_when: false
 
 - name: "Install tzdata package"
