@@ -132,6 +132,7 @@
      - netplan.io
      - python3-pip
      - jq
+     - cron
   become: yes
 
 - name: "Disable IPv6"
