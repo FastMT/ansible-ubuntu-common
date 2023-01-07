@@ -15,6 +15,7 @@ linux_disable_ipv6: true
 
 # Sysctl parameters
 linux_sysctl:
-  - { name: "net.ipv4.tcp_ecn",     value: 0 }
-  - { name: "net.ipv4.ip_forward",  value: 1 }
-  - { name: "fs.file-max",          value: 70000 }
+  - { name: "net.ipv4.tcp_ecn",     value: "0" }
+  - { name: "net.ipv4.ip_forward",  value: "1" }
+  - { name: "fs.file-max",          value: "9999999" }
+  - { name: "fs.nr_open",           value: "9999999" }
