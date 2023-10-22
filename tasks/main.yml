@@ -53,9 +53,9 @@
   register: disable_GSSAPI
 
 - name: "/etc/ssh/sshd_config - set custom sshd port"
-  lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^Port[ ]" line="Port {{ linux_ssh_port | default(22) }}"
+  lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^Port[ ]" line="Port {{ linux_ssh_port | default (ansible_port | default('22')) }}"
   become: yes
-  when: linux_ssh_port is defined 
+  when: linux_ssh_port is defined or ansible_port is defined
   register: custom_port
 
 - name: "Restart sshd if config changed"
