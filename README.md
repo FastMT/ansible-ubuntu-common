@@ -9,7 +9,7 @@ Create requirements.yml file
 # Include ubuntu-common role
 - src: https://github.com/FastMT/ansible-ubuntu-common.git
   name: ubuntu-common
-  version: "v1.0.8"
+  version: "v1.0.9"
 ```
 
 Install external module into ~/.ansible/roles folder
@@ -27,13 +27,16 @@ playbook.yml:
 - role: "ubuntu-common"
     vars:
       # Optional parameter - not ask password on sudo (default: yes)
-      sudo_nopasswd: yes
+      linux_sudo_nopasswd: true
 
       # Optional parameter - password authentication (default: no)
-      ssh_password_auth: no
+      linux_ssh_password_auth: false
+
+      # Optional parameter - custom ssh port (default: 22)
+      linux_ssh_port: 122
 
       # Optional parameter - install Chrony time sync service (default: yes)
-      linux_install_chrony: yes
+      linux_install_chrony: true
 
       # Optional parameter - timezone (default: 'UTC')
       linux_timezone: 'UTC'
