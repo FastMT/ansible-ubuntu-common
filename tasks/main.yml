@@ -11,7 +11,7 @@
 - name: "Configure hostname"
   hostname:
     name: "{{ inventory_hostname }}"
-  become: yes
+  become: true
 
 - name: "Add hostname into /etc/hosts"
   lineinfile:
@@ -19,7 +19,7 @@
     state: present
     line: "{{ ansible_host }} {{ inventory_hostname }}"
     regexp: "^.*[ ]{{ inventory_hostname }}"
-  become: yes
+  become: true
 
 #####################################################################################
 # Configure SSH server
@@ -27,40 +27,40 @@
 
 - name: "/etc/ssh/sshd_config - disable root login"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PermitRootLogin[ ]" line="PermitRootLogin no"
-  become: yes
+  become: true
   register: disable_root_login
 
 - name: "/etc/ssh/sshd_config - disable password authentication"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PasswordAuthentication[ ]" line="PasswordAuthentication no"
-  become: yes
+  become: true
   register: disable_pw_auth
   when: linux_ssh_password_auth == false
 
 - name: "/etc/ssh/sshd_config - enable password authentication"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?PasswordAuthentication[ ]" line="PasswordAuthentication yes"
-  become: yes
+  become: true
   register: disable_pw_auth
   when: linux_ssh_password_auth == true
 
 - name: "/etc/ssh/sshd_config - disable DNS resolving on connect"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?UseDNS[ ]" line="UseDNS no"
-  become: yes
+  become: true
   register: disable_dns_resolve
 
 - name: "/etc/ssh/sshd_config - disable GSSAPIAuthentication"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^[#]?GSSAPIAuthentication[ ]" line="GSSAPIAuthentication no"
-  become: yes
+  become: true
   register: disable_GSSAPI
 
 - name: "/etc/ssh/sshd_config - set custom sshd port"
   lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^Port[ ]" line="Port {{ linux_ssh_port | default (ansible_port | default('22')) }}"
-  become: yes
+  become: true
   when: linux_ssh_port is defined or ansible_port is defined
   register: custom_port
 
 - name: "Restart sshd if config changed"
   service: name=sshd state=restarted
-  become: yes
+  become: true
   when: >
     disable_root_login.changed or
     disable_pw_auth.changed or
@@ -73,12 +73,12 @@
 
 - name: "/etc/sudoers - do not require password for sudo"
   lineinfile: dest=/etc/sudoers state=present regexp="^\%sudo[ \t]*ALL\=\(ALL\:ALL\)" line="%sudo ALL=(ALL:ALL) NOPASSWD:ALL"
-  become: yes
+  become: true
   when: linux_sudo_nopasswd == true
 
 - name: "/etc/sudoers - require password for sudo"
   lineinfile: dest=/etc/sudoers state=present regexp="^\%sudo[ \t]*ALL\=\(ALL\:ALL\)" line="%sudo ALL=(ALL:ALL) ALL"
-  become: yes
+  become: true
   when: linux_sudo_nopasswd == false
 
 #####################################################################################
@@ -86,7 +86,7 @@
 #####################################################################################
 - name: "Updating repositories..."
   apt: update_cache=yes cache_valid_time=3600 force=yes
-  become: yes
+  become: true
   check_mode: no
   changed_when: false
 
@@ -95,11 +95,11 @@
     pkg: tzdata
     state: latest
     force: yes 
-  become: yes
+  become: true
 
 - name: "Setting timezone..."
   timezone: "name={{ linux_timezone }}"
-  become: yes
+  become: true
 
 - name: "Install packages"
   apt:
@@ -133,7 +133,43 @@
      - python3-pip
      - jq
      - cron
-  become: yes
+  become: true
+
+#####################################################################################
+# Install KVM guest agent
+#####################################################################################
+
+- name: Install KVM Guest agent
+  apt:
+    state: latest
+    pkg:
+     - qemu-guest-agent
+  become: true
+  when: "'kvm' in ansible_virtualization_tech_guest"
+
+- name: Enable KVM Guest agent
+  service:
+    name: qemu-guest-agent
+    state: started
+    enabled: true
+  become: true
+  when: "'kvm' in ansible_virtualization_tech_guest"
+
+#####################################################################################
+# Install Chrony
+#####################################################################################
+
+- name: "Install Chrony time sync daemon"
+  apt:
+    state: latest
+    pkg:
+     - chrony
+  when: linux_install_chrony
+  become: true
+
+#####################################################################################
+# Configure sysctl
+#####################################################################################
 
 - name: "Disable IPv6"
   sysctl:
@@ -145,8 +181,8 @@
      - net.ipv6.conf.default.disable_ipv6
      - net.ipv6.conf.lo.disable_ipv6
   when: linux_disable_ipv6
-  become: yes
-  ignore_errors: yes
+  become: true
+  ignore_errors: true
 
 - name: "Set Sysctl parameters"
   sysctl:
@@ -154,13 +190,5 @@
     value: "{{ item.value }}"
     state: present
   with_items: "{{ linux_sysctl }}"
-  become: yes
-  ignore_errors: yes
-
-- name: "Install Chrony time sync daemon"
-  apt:
-    state: latest
-    pkg:
-     - chrony
-  when: linux_install_chrony
-  become: yes
+  become: true
+  ignore_errors: true
