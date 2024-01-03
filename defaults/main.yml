@@ -1,8 +1,11 @@
 # Do not ask password on sudo
-linux_sudo_nopasswd: yes
+linux_sudo_nopasswd: true
 
 # Disable password authentication
-linux_ssh_password_auth: no
+linux_ssh_password_auth: false
+
+# Install QEMU / KVM guest
+linux_qemu_guest: true
 
 # Install Chrony time sync service
 linux_install_chrony: yes

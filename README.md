@@ -9,7 +9,7 @@ Create requirements.yml file
 # Include ubuntu-common role
 - src: https://github.com/FastMT/ansible-ubuntu-common.git
   name: ubuntu-common
-  version: "v1.0.10"
+  version: "v1.0.11"
 ```
 
 Install external module into ~/.ansible/roles folder
@@ -37,6 +37,9 @@ playbook.yml:
 
       # Optional parameter - install Chrony time sync service (default: yes)
       linux_install_chrony: true
+
+      # Optional parameter - install QEMU / KVM guest agent (default: yes)
+      linux_qemu_guest: true
 
       # Optional parameter - timezone (default: 'UTC')
       linux_timezone: 'UTC'
