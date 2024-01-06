@@ -196,3 +196,17 @@
   with_items: "{{ linux_sysctl }}"
   become: true
   ignore_errors: true
+
+####################################################################
+# Set system PAM limits
+####################################################################
+
+- name: Set open files limit
+  community.general.pam_limits:
+    domain: "{{ item.domain }}"
+    limit_type: "{{ item.type }}"
+    limit_item: "{{ item.pam_item }}"
+    value: "{{ item.limit }}"
+  become: true
+  loop: linux_pam_limits
+

@@ -9,7 +9,7 @@ Create requirements.yml file
 # Include ubuntu-common role
 - src: https://github.com/FastMT/ansible-ubuntu-common.git
   name: ubuntu-common
-  version: "v1.0.11"
+  version: "v1.0.12"
 ```
 
 Install external module into ~/.ansible/roles folder
@@ -50,4 +50,10 @@ playbook.yml:
       # Optional parameter - sysctl config
       linux_sysctl:
         - { name: "systctl.config.parameter",     value: 1 }      
+
+      # Optional parameter - PAM limits
+      linux_pam_limits:
+        - { pam_item: "nofile", domain: "*", type: "soft", limit: 1048576 }
+        - { pam_item: "nofile", domain: "*", type: "hard", limit: 1048576 }
+
 ```   

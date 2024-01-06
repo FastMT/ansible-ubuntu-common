@@ -22,3 +22,8 @@ linux_sysctl:
   - { name: "net.ipv4.ip_forward",  value: "1" }
   - { name: "fs.file-max",          value: "9999999" }
   - { name: "fs.nr_open",           value: "9999999" }
+
+# PAM limits
+linux_pam_limits: []
+# - { pam_item: "nofile", domain: "*", type: "soft", limit: 1048576 }
+# - { pam_item: "nofile", domain: "*", type: "hard", limit: 1048576 }
