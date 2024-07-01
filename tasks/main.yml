@@ -58,14 +58,22 @@
   when: linux_ssh_port is defined or ansible_port is defined
   register: custom_port
 
+- name: "/etc/ssh/sshd_config - set LoginGraceTime to 0 (CVE-2024-6387)"
+  lineinfile: dest=/etc/ssh/sshd_config state=present regexp="^LoginGraceTime[ ]" line="LoginGraceTime 0"
+  become: true
+  when: linux_ssh_port is defined or ansible_port is defined
+  register: login_grace_time
+
 - name: "Restart sshd if config changed"
   service: name=sshd state=restarted
   become: true
-  when: >
+  when: >-
     disable_root_login.changed or
     disable_pw_auth.changed or
     disable_dns_resolve.changed or
-    disable_GSSAPI.changed or custom_port.changed
+    disable_GSSAPI.changed or 
+    custom_port.changed or
+    login_grace_time.changed
 
 #####################################################################################
 # Configure SUDO
