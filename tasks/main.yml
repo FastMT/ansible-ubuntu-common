@@ -121,7 +121,6 @@
      - nano
      - mc
      - iperf3
-     - dstat
      - p7zip-full
      - apt-transport-https
      - iputils-ping

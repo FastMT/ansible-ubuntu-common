@@ -9,7 +9,7 @@ Create requirements.yml file
 # Include ubuntu-common role
 - src: https://github.com/FastMT/ansible-ubuntu-common.git
   name: ubuntu-common
-  version: "v1.0.14"
+  version: "v1.0.15"
 ```
 
 Install external module into ~/.ansible/roles folder
