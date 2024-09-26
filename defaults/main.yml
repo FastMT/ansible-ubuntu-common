@@ -16,6 +16,9 @@ linux_timezone: 'UTC'
 # Disable IPv6
 linux_disable_ipv6: true
 
+# Disable swap
+linux_disable_swap: true
+
 # Sysctl parameters
 linux_sysctl:
   - { name: "net.ipv4.tcp_ecn",     value: "0" }

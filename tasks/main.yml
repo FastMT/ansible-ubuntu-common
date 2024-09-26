@@ -8,6 +8,7 @@
 #####################################################################################
 # Set hostname
 #####################################################################################
+
 - name: "Configure hostname"
   hostname:
     name: "{{ inventory_hostname }}"
@@ -20,6 +21,23 @@
     line: "{{ ansible_host }} {{ inventory_hostname }}"
     regexp: "^.*[ ]{{ inventory_hostname }}"
   become: true
+
+#####################################################################################
+# Disable swap
+#####################################################################################
+
+- name: "Disable swap"
+  command: swapoff -a
+  become: true
+  when: linux_disable_swap
+
+- name: "Remove swap from /etc/fstab"
+  lineinfile:
+    dest: /etc/fstab
+    state: absent
+    regexp: "^.*swap[ ]"
+  become: true
+  when: linux_disable_swap
 
 #####################################################################################
 # Configure SSH server
@@ -140,6 +158,25 @@
      - jq
      - cron
   become: true
+
+- name: Purge pcp package (just in case)
+  apt:
+    name: pcp
+    state: absent
+    purge: yes
+  become: true
+  register: pcp_purge
+
+- name: Reload systemctl daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when: pcp_purge.changed
+
+- name: Reset failed systemd services
+  command: systemctl reset-failed
+  become: true
+  when: pcp_purge.changed
 
 #####################################################################################
 # Install KVM guest agent
